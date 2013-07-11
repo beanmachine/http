@@ -1,67 +1,390 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
+		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+		<title>Toronto Video Production Company</title>
+		<link rel="stylesheet" type="text/css" href="styles.css" ></link>
+		
+		<!-- jquery -->
+		<script type="text/javascript" src="js/jquery-2.0.2.min.js" ></script>
 
+		<!-- jquery numbers plugin -->
+		<script type="text/javascript" src="js/jquery.sizes.js" ></script>
+
+		<!-- div mutation detection -->
+		<script type="text/javascript" src="js/mutate.events.js"></script>  
+		<script type="text/javascript" src="js/mutate.min.js"></script>
+
+		<!-- google maps -->	
+		<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=true"></script>
+		<!-- google maps jquery wrapper -->
+		<!-- <script type="text/javascript" src="js/jquery.ui.map.min.js"></script> -->
+
+		<script type="text/javascript">
+			
+			var WHAT_WE_DO = "what_we_do";
+			var OUR_WORK = "our_work";
+			var SERVICES = "services";
+			var CLIENTS = "clients";
+			var CONTACT = "contact";
+
+			var loc = new google.maps.LatLng(43.643248,-79.402169);
+			var map;
+
+			/* circular linked list 
+				to control WHAT_WE_DO state */
+
+			var end = { 
+				name:"three",
+				rdy: false,
+				src: 'imgs/mainImage3.jpg',
+				next:null
+			};
+			
+			var middle = { 
+				name:"two",
+				rdy: false,
+				src: 'imgs/mainImage2.jpg',
+				next:end
+			};
+
+			var start = { 
+				name:"one",
+				rdy: true,
+				src: null,
+				next:middle
+			};
+
+			end.next = start;
+			var currentState = start;
+
+			var deactivateLink = function(selector) {
+				selector.each(function(index, e) {
+					$(this).removeClass('active');
+				});
+			};
+
+			var activateLink = function(selector) {
+				selector.each(function(index, e) {
+					if ($(this).hasClass('active') == false) {
+						$(this).addClass('active');
+					}
+				});
+			};
+
+			//preload images
+			function preload(arrayOfStates) {
+			    $(arrayOfStates).each(function(){
+                                var makeReady = function (state) {
+                                     state.rdy = true;	
+				};
+
+			    	var img = new Image();
+
+				var state = this;
+
+				$(img).load(function (e) {
+					makeReady(state);
+				});
+
+		            	img.src = this.src;
+			    });
+			}
+
+			preload([
+				middle,
+				end
+			]);
+
+			/*
+			 * this positions the footer at the bottom of the page
+			 * and, if there is room, expand the height of the footer
+			 * by up to 100 px
+			 */
+			function fixBottom() {
+				var FOOTER_HEIGHT_BASE = 152; //min height for base
+
+				//the height the body would be without any expansions
+				var naturalBodyHeight =$('#body_background').height() - $('#expander').height() + FOOTER_HEIGHT_BASE; 
+
+				if (naturalBodyHeight < $(window).height()) {
+					var totalExpand = $(window).height() - naturalBodyHeight;
+					
+					//add up to 100 to footer height
+					var footerHeight = FOOTER_HEIGHT_BASE + Math.min(100, totalExpand);
+					var expanderHeight = totalExpand - Math.min(100, totalExpand);
+
+					$('#expander').height(expanderHeight);
+					$('#footer_outer').height(footerHeight);
+				} else {
+					$('#expander').height(0);
+					$('#footer_outer').height(FOOTER_HEIGHT_BASE);
+				}
+			}
+
+			$(document).ready(function() {
+				var stateObjs = $(".what_we_do_background_img");
+				
+				fixBottom();
+				setInterval(function() {
+					if (currentState.next.rdy == false)
+						return;
+
+					stateObjs.each(function (e) {     
+						$(this).removeClass(currentState.name);
+					});
+					
+					currentState = currentState.next;
+					
+					stateObjs.each(function (e) {
+						if ($(this).hasClass == false)
+							$(this).addClass(currentState.name);
+					});
+
+				  }, 3000);
+
+				//this corrects for the center body div to not be too big
+				// var containerWidth = $("#body_container").width();
+				// $('#body_container').width(containerWidth - 108);
+
+				var allActivatable = $('.contact, .our_work, .services, .clients, .what_we_do'); 
+				
+				//LINK: what we do clicked
+				$('#link_' + WHAT_WE_DO).click(function() {
+					//set background
+					$('#body_background').attr('class', WHAT_WE_DO + "_bg");
+					
+					deactivateLink(allActivatable);
+					activateLink($('.' + WHAT_WE_DO));
+				});
+	
+				//LINK: our work clicked
+				$('#link_'+ OUR_WORK).click(function(e) {
+					//set background
+					$('#body_background').attr('class', OUR_WORK + "_bg");
+					
+					deactivateLink(allActivatable);
+					activateLink($('.' + OUR_WORK));
+				});
+				
+				//LINK: services clicked
+				$('#link_'+ SERVICES).click(function(e) {
+					//set background
+					$('#body_background').attr('class', SERVICES + "_bg");
+					
+					deactivateLink(allActivatable);
+					activateLink($('.' + SERVICES));
+				});
+
+				//LINK: clients clicked	
+				$('#link_' + CLIENTS).click(function(e) {
+					//set background
+					$('#body_background').attr('class', CLIENTS + "_bg");
+					
+					deactivateLink(allActivatable);
+					activateLink($('.' + CLIENTS));
+				});
+
+				//LINK: contact clicked	
+				$('#link_' + CONTACT).click(function(e) {
+					//set background
+					$('#body_background').attr('class', CONTACT + "_bg");
+					
+					deactivateLink(allActivatable);
+					activateLink($('.' + CONTACT));
+
+					//refresh map
+					google.maps.event.trigger(map, "resize");
+					map.setCenter(loc);
+				});
+
+				//make the text under the social links activate on hover in the contact page
+				$('.social_link_rollover').each(function(index) {
+					$(this).hover(
+						function(e) {
+							$(this).next().addClass('active');				
+						}, 
+						function(e) {
+							$(this).next().removeClass('active');
+						})});
+
+				//set up map on contact page
+				var mapOptions = {
+				    zoom:      16,
+				    center:    loc,
+				    disableDefaultUI: true,
+				  }
+				
+				map = new google.maps.Map($("#map_canvas")[0], mapOptions);
+
+				var marker = new google.maps.Marker({
+					  position: loc,
+					  map:      map,
+					  title:    'Da Crib',
+					  clickable: false
+					});
+				
+				$('#body_background').mutate('height', fixBottom);
+				$(window).mutate('height', fixBottom);
+			});
+
+		</script>
 	</head>
 	<body>
-		
-		<div id="body_background" >
-		
+		<div id="body_background" class="what_we_do_bg" >
+			<!-- what we do rotating bgs -->
+			<div id="what_we_do_bgs" class="active">
+				<img class="what_we_do_background_img" src="imgs/mainImage1.jpg"/>
+				<img class="what_we_do_background_img" src="imgs/mainImage2.jpg"/>
+				<img class="what_we_do_background_img" src="imgs/mainImage3.jpg"/>
+			</div>
+
 			<!-- header start -->
-			<div id="header">
-				<img id="logo" src="" />
-				<div id="link_container">
-					<ul>
-						<li>
-							<div id="what_we_do_background" class="header_link">
-								<a href="">What we do</a>
-							</div>
-						</li>
-						<li>
-							<div id="our_work_background" class="header_link">
-								<a href="">Our work</a>
-							</div>
-						</li>
-						<li>
-							<div id="services_background" class="header_link">
-								<a href="">Services</a>
-							</div>
-						</li>
-						<li>
-							<div id="clients_background" class="header_link">
-								<a href="">Clients</a>
-							</div>
-						</li>
-						<li>
-							<div id="contact_background" class="header_link">
-								<a href="">Contact</a>
-							</div>
-						</li>
-					</ul>
+			<div id="header_outer">
+				<div id="header_inner">
+					
+					<div id="logo_container">
+						<img alt="Toronto Video Production Company" id="logo" src="imgs/TVC-15_Logo.png" />
+						<p id="logo_text" class="body_font">Toronto Video Production Co.</p>
+					</div>
+					
+					<div id="link_container">
+						<ul>
+							<li>
+								<div id="what_we_do_background" class="header_link_container what_we_do active">
+									<a id="link_what_we_do" class="header_link what_we_do link_font active" href="#">What we do</a>
+								</div>
+							</li>
+							<li>
+								<div id="our_work_background" class="header_link_container our_work">
+									<a id="link_our_work" class="header_link link_font our_work" href="#" >Our work</a>
+								</div>
+							</li>
+							<li>
+								<div id="services_background" class="header_link_container services">
+									<a id="link_services" class="header_link link_font services" href="#" >Services</a>
+								</div>
+							</li>
+							<li>
+								<div id="clients_background" class="header_link_container clients">
+									<a id="link_clients" class="header_link link_font clients" href="#" >Clients</a>
+								</div>
+							</li>
+							<li>
+								<div id="contact_background" class="header_link_container contact">
+									<a id="link_contact" class="header_link link_font contact" href="#">Contact</a>
+								</div>
+							</li>
+						</ul>
+					</div>
 				</div>
 			</div>
 			<!-- header end -->
-			
-			
-		</div>
-		
-		
-		
-		<!-- footer start -->
-		<div id="footer">
-			<div id="footer_text" >
+
+			<!-- What we do begin -->
+			<div id="what_we_do_body" class="what_we_do middle_body active">
+				<div id="what_we_do_body_center">
+					<div id="what_we_do_body_outer" class="column">
+						<div id="what_we_do_body_inner">
+							<img alt="circle" class="one" id="big_grey_circle" src="imgs/Bubble1_3.png" />
+							<img alt="circle" class="one" id="little_blue_circle" src="imgs/Bubble1_4.png" />
+							<div id="video_border">
+								<iframe id="video_player" src="http://player.vimeo.com/video/64781226" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>
+							</div>
+							<div id="what_we_do_screen_one_top_text">
+								<h1>
+									<p><span class="title_font">We produce</span></p>
+									<p><span class="bold_font">COPORATE, PROMOTIONAL</span></p>
+									<p><span class="title_font">and</span><span class="bold_font">INSTRUCTIONAL VIDEOS</span></p>
+									<p><span class="title_font">that inform and inspire</span></p>
+								</h1>
+							</div>
+							<div id="what_we_do_screen_one_bottom_text">
+								<h1>
+									<p><span class="title_font">Let's work together</span></p>
+									<p><span class="title_font">to create a great video</span></p>
+									<p><span class="title_font">for your business</span></p>
+								</h1>
+							</div>
+						</div>
+					</div>
+					<div id="sub_navigation_outer">
+						<div id="sub_navigation_inner">
+							<div id="sub_page_1" class="sub_page_link"></div>
+							<div id="sub_page_2" class="sub_page_link"></div>
+							<div id="sub_page_3" class="sub_page_link"></div>
+						</div>
+					</div>
+				</div>
 			</div>
-			<div id="client_img_link_list">
-				<ul>
-					<!-- link 1 -->
-					<li>
-						<a href="" />
-					</li>
-					<!-- link 2 -->
-					<li>
-						<a href="" />
-					</li>
-				</ul>
+			<!-- What we do end -->
+
+			<!-- Contact Page Begin -->
+			<div id="contact_body" class="contact middle_body">
+				<div id="contact_body_inner">
+					<div id="contact_body_left">
+						<div>
+							<h1>
+								<p><span class="title_font">Get</span><span class="bold_font"> IN TOUCH</span><span class="title_font"> with us for your video production needs.</span></p>
+								<p><span class="title_font">We're here to help</span></p>
+							</h1>
+							<div id="social_link_container">
+								<div class="social_link_container_seperator">
+									<div id="social_link_container_left" class="social_link_floater">
+										<a href="" id="twitter_social_link" src="imgs/twitter.png"  class="social_link_rollover" ></a>
+										<p class="body_font social_link_text">twitter</p>
+									</div>
+								</div>
+								<div class="social_link_container_seperator">
+									<div id="social_link_container_center" class="social_link_floater">
+										<a href="" id="facebook_social_link" src="imgs/facebook.png" class="social_link_rollover"></a>
+										<p class="body_font social_link_text">facebook</p>
+									</div>
+								</div>
+								<div class="social_link_container_seperator">
+									<div id="social_link_container_right" class="social_link_floater">
+										<a href="" id="google_social_link" src="imgs/google.png"     class="social_link_rollover"  ></a>
+										<p class="body_font social_link_text">google+</p>
+									</div>
+								</div>
+							</div>
+							<div id="contact_info">
+								<p class="body_font">info@videoproductiontoronto.co</p>
+								<p class="body_font">416.402.4366</p>
+							</div>
+							<div id="address">
+								<p class="body_font">58 Stewart St. Toronto</p>
+								<p class="body_font">Ontario, Canada</p>
+								<p class="body_font">M5V 3S1</p>
+							</div>
+						</div>
+					</div>
+					<div id="map_canvas_container">
+						<div id="map_canvas"></div>
+						<img id="map_mask" alt="Address Image Mask" src="imgs/googleMap_mask.png"></img>
+					</div>
+				</div>
+			</div>
+			<div id="expander" ></div>
+			<!-- Contact Page End -->
+			<div id="bottom_shadow"></div>
+		</div>
+
+		<!-- footer start -->
+		<div id="footer_outer">
+			<div id="footer_inner">
+				<h2 class="body_font">clients</h2>
+				<div id="footer_content">
+					<div id="footer_text">
+						<p class="body_font">Our portfolio includes promotional videos for some of Toronto's high-profile clients. We are dedicated in promoting your brand by providing inspired content and detail-oriented video production work.</p>
+					</div>
+					<div id="client_img_link_list">
+						<img class="client_link" alt="TD Bank Video" src="imgs/Logo1.png" />
+						<img class="client_link" alt="CIBC Promo Video" src="imgs/Logo2.png" />
+						<img class="client_link" alt="Knorr Video" src="imgs/Logo3.png" />
+						<img class="client_link" alt="Lipton Video" src="imgs/Logo4.png" />
+					</div>
+				</div>
 			</div>
 		</div>
 		<!-- footer end -->
